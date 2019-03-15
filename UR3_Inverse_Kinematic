@@ -1,0 +1,84 @@
+#include "lab4pkg/lab4.h"
+
+/** 
+ * function that calculates an elbow up Inverse Kinematic solution for the UR3
+ */
+std::vector<double> lab_invk(float xWgrip, float yWgrip, float zWgrip, float yaw_WgripDegree)
+{
+
+	double xcen,ycen,zcen,theta6,theta5,theta4,theta3,theta2,theta1,x3end,y3end,z3end; 
+	double xgrip,ygrip,zgrip;
+	double a1,a2,a3,a4,a5,a6;
+	double d1,d2,d3,d4,d5,d6;
+
+	a1 = 0;
+	d1 = 0.152;
+	a2 = 0.244;
+	d2 = 0.120;
+	a3 = 0.213;
+	d3 = -0.093;
+	a4 = 0;
+	d4 = 0.083;
+	a5 = 0;
+	d5 = 0.083;
+	a6 = 0.0535;
+	d6 = (0.082+0.056);
+
+	xgrip = xWgrip + 0.15;
+	ygrip = yWgrip - 0.15;
+	zgrip = zWgrip - 0.012;
+	
+	// double L = 0.06; // grip offset from body (not given in manual)
+
+	xcen = xgrip - a6 * cos(yaw_WgripDegree * PI / 180); 
+	ycen = ygrip - a6 * sin(yaw_WgripDegree * PI / 180);
+	zcen = zgrip;
+
+	double t1 = atan2(xcen,ycen);
+		cout<<"t1: "<< t1<<endl;
+
+	double t2 = asin(0.11/(sqrt(xcen*xcen + ycen*ycen)));
+		cout<<"t2: "<< t2<<endl;
+
+	theta1 = PI/2 - (t1 + t2);  // Default value Need to Change
+	theta6 = theta1 - (yaw_WgripDegree*PI/180 - PI/2); // Default value Need to Change
+ 	
+ 	double t4 = theta1 - atan(0.083 / 0.11); // l1 = 0.083, l2 = lc = 0.11, l3 = 0.138
+	
+	x3end = xcen + 0.138*sin(t4);
+		cout<<"x3end: "<< x3end<<endl;
+
+	y3end = x3end*tan(theta1);
+	z3end = zgrip + d6;
+
+	double l = sqrt(x3end * x3end + y3end * y3end + (z3end - 0.152) * (z3end - 0.152));
+	cout<<"l: "<< l<<endl;
+
+	double t5 = acos((0.244*0.244 + l*l - 0.213*0.213)/(2*0.244*l));
+	cout<<"t5: "<< t5 <<endl;
+	double beta = asin(l*sin(t5)/0.213);
+	cout<<"beta: "<< beta <<endl;
+	double t6 = asin((z3end - 0.152)/l);
+	cout<<"t6: "<< t6 <<endl;
+
+	theta2= (t5 + t6)*-1; // Default value Need to Change
+	theta3= PI - beta; // Default value Need to Change
+	theta4= (270 * PI / 180 - beta + theta2) * -1; // Default value Need to Change
+	theta5=-PI/2;  // Default value Need to Change
+	
+
+
+
+	// View values
+	//use cout
+	cout<<"theta1: "<< theta1<<endl;
+	cout<<"theta2: "<< theta2<<endl;
+	cout<<"theta3: "<< theta3<<endl;
+	cout<<"theta4: "<< theta4<<endl;
+	cout<<"theta5: "<< theta5<<endl;
+	cout<<"theta6: "<< theta6<<endl;
+
+	// check that your values are good BEFORE sending commands to UR3
+	//lab_fk calculates the forward kinematics and convert it to std::vector<double>
+	return lab_fk((float)theta1,(float)theta2,(float)theta3,(float)theta4,(float)theta5,(float)theta6);
+}
